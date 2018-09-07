@@ -70,6 +70,9 @@
 **实例**：
 
 ```python
+import pandas as pd
+import numpy as np
+
 df = pd.DataFrame({'A' : ['foo', 'bar', 'foo', 'bar',
                           'foo', 'bar', 'foo', 'foo'],
                   'C' : np.random.randn(8),
@@ -145,17 +148,166 @@ print(grouped.get_group('consonant'))
 
 #### 2. Apply
 
+##### aggregation:
+
+`grouped.aggregate(method)` 方法：使用method参数处理grouped中的每一个分组。
+
+`grouped.agg([method1[,method2[,...]]])` 方法：一次性用多个方法进行处理。
+
+`grouped.agg({colomn:method,...})` 方法：用不同方法处理不同列的数据。
+
+**实例**：
+
+```python
+import pandas as pd
+import numpy as np
+
+df = pd.DataFrame({'A' : ['foo', 'bar', 'foo', 'bar',
+                          'foo', 'bar', 'foo', 'foo'],
+                  'C' : np.random.randn(8),
+                  'D' : np.random.randn(8),
+                  'B' : ['one', 'one', 'two', 'three',
+                        'two', 'two', 'one', 'three']
+                  })
+
+grouped = df.groupby('A',as_index=False)
+
+# 使用np.sum函数对每组求和
+print(grouped.aggregate(np.sum))
+# 输出结果：
+     A         C         D
+0  bar -1.000992 -0.081658
+1  foo -1.340381  3.082666
+# 效果与sum()函数相同：
+print(grouped.sum())
+# 输出结果：
+     A         C         D
+0  bar -1.000992 -0.081658
+1  foo -1.340381  3.082666
+
+# 多个方法处理
+print(grouped['C'].agg([np.sum, np.mean, np.std]))
+# 输出结果：
+          sum      mean       std
+A                                
+bar -0.467876 -0.155959  0.300311
+foo  2.787968  0.557594  0.748056
+
+# 用不同方法处理不同列的数据
+print(grouped.agg({'C' : 'sum', 'D' : 'std'}))
+# 输出结果：
+     A         C         D
+0  bar  0.613597  0.415764
+1  foo -2.231638  0.773108
+```
+
+`grouped.describe()` 方法：计算一系列的统计量，这些统计量也有专门的函数可以单独调用。
+
+**实例**：
+
+```python
+# 计算统计量
+print(grouped.describe())
+# 输出结果：
+      C                                                                           D                                                                      
+  count      mean       std       min       25%       50%       75%       max count      mean       std       min       25%       50%       75%       max
+0   1.0  0.254161       NaN  0.254161  0.254161  0.254161  0.254161  0.254161   1.0  1.511763       NaN  1.511763  1.511763  1.511763  1.511763  1.511763
+1   1.0  0.215897       NaN  0.215897  0.215897  0.215897  0.215897  0.215897   1.0 -0.990582       NaN -0.990582 -0.990582 -0.990582 -0.990582 -0.990582
+2   1.0 -0.077118       NaN -0.077118 -0.077118 -0.077118 -0.077118 -0.077118   1.0  1.211526       NaN  1.211526  1.211526  1.211526  1.211526  1.211526
+3   2.0 -0.491888  0.117887 -0.575247 -0.533567 -0.491888 -0.450209 -0.408530   2.0  0.807291  0.761937  0.268520  0.537905  0.807291  1.076676  1.346061
+4   1.0 -0.862495       NaN -0.862495 -0.862495 -0.862495 -0.862495 -0.862495   1.0  0.024580       NaN  0.024580  0.024580  0.024580  0.024580  0.024580
+5   2.0  0.024925  1.652692 -1.143704 -0.559389  0.024925  0.609240  1.193555   2.0  0.592714  1.462816 -0.441652  0.075531  0.592714  1.109898  1.627081
+```
+
+##### transformation
+
+`grouped.transform(method)` 方法：使用method方法对每组中的数据进行处理
+
+**实例**：
+
+```python
+index = pd.date_range('10/1/1999', periods=1100)
+ts = pd.Series(np.random.normal(0.5, 2, 1100), index)
+ts = ts.rolling(window=100,min_periods=100).mean().dropna()
+
+key = lambda x: x.year
+zscore = lambda x: (x - x.mean()) / x.std() #用于transform的函数，进行归一化
+transformed = ts.groupby(key).transform(zscore)
+
+grouped_trans = transformed.groupby(key)
+print(grouped_trans.mean()) #期望
+print(grouped_trans.std()) #标准差
+# 输出结果
+2000   -2.699790e-16
+2001    1.861525e-16
+2002   -6.561138e-16
+dtype: float64
+2000    1.0
+2001    1.0
+2002    1.0
+dtype: float64
+```
+
+##### filtration:
+
+ `grouped.filter(method)` 方法：使用method方法对每组中的数据进行判断，返回True或False，从而筛选出返回True的数据
+
+**实例**：
+
+```python
+sf = pd.Series([1, 1, 1, 1, 2, 3, 4])
+print(sf.groupby(sf).filter(lambda x: x.sum() > 3)) # 筛选出数据的和大于3的分组
+# 输出结果
+0    1
+1    1
+2    1
+3    1
+6    4
+dtype: int64
+```
+
+##### apply：
+
+`grouped.apply(method)` 方法：对每一个group应用apply方法
+
+**实例**：
+
+```python
+sf = pd.Series(np.random.normal(0.5, 2, 10), index=np.arange(10))
+def f(x):
+   return pd.Series([ x, x**2 ], index = ['x', 'x^2'])
+print(sf.apply(f))
+# 输出结果
+          x        x^2
+0  1.465540   2.147806
+1  1.018819   1.037991
+2  0.927661   0.860555
+3  3.959855  15.680452
+4  0.750213   0.562820
+5  0.784470   0.615393
+6  3.476535  12.086294
+7  0.099393   0.009879
+8 -1.783570   3.181121
+9  0.427524   0.182777
+```
+
+（本节参考资料：http://pandas.pydata.org/pandas-docs/stable/groupby.html#）
 
 
-#### 六、合并(merge,join,concatenate)
 
-#### 七、可视化(visualize)
+### 六、合并(merge,join,concatenate)
+
+
+
+
+
+### 七、可视化(visualize)
 
 1、散点图 (plot) ：直接调用 matplotlob 的plot() 方法
 
 
 
-#### 八、参考资料
+### 八、参考资料
 
 
 
