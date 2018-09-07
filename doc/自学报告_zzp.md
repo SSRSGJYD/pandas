@@ -519,9 +519,131 @@ pd.merge(left, right, left_on=key_or_keys, right_index=True,
 
 ### 七、可视化(visualize)
 
-1、散点图 (plot) ：直接调用 matplotlib 的plot() 方法
+在这里，我们针对数据集 `MovieLens` (https://grouplens.org/datasets/movielens/) 进行可视化分析。
 
+#### 1、散点图：
 
+**方法：** `series_obj.plot()` 或 `dataframe_obj.plot()` ，
+
+```python
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
+# 读入数据
+path = '../dataset/ml-latest-small/'
+links = pd.read_csv(path+'links.csv', encoding='latin-1')
+movies = pd.read_csv(path+'movies.csv', encoding='latin-1')
+ratings = pd.read_csv(path+'ratings.csv', encoding='latin-1')
+tags = pd.read_csv(path+'tags.csv', encoding='latin-1')
+# 综合各表数据
+movie_ratings = pd.merge(movies, ratings)
+# 计算每部影片的评分的平均值
+ratings_mean = ratings.groupby(by='movieId').mean()
+# 按照平均分排序
+ratings_mean_sorted = ratings_mean.sort_values(by='rating')
+ratings_mean_sorted['rank'] = ratings_mean_sorted['rating'].rank(ascending=1,method='first')
+# 绘制评分的散点图，按照评分从低到高
+ratings_mean_sorted.plot(x='rank',y='rating')
+plt.title(u"影片评分与评分排名的关系", fontproperties="SimHei")
+plt.show()
+```
+
+输出如图：
+
+![plot](F:\zzp\大学\暑期小学期\python小学期\自学报告\pandas\caption\plot.png)
+
+#### 2. 柱状图
+
+**方法：** `series_obj.plot.bar()` 或 `dataframe_obj.plot.bar()` ，
+
+```python
+# 四舍五入
+ratings_mean['rating'] = ratings_mean['rating'].apply(np.round)
+# 按照四舍五入后的评分进行分组
+grouped = ratings_mean.groupby('rating')
+count = []
+names = []
+for name, group in grouped:
+    names.append(name)
+    count.append(len(group))
+rel = pd.DataFrame({'count':count},index=names)
+# 柱状图
+rel.plot.bar()
+plt.title(u"影片评分的分布情况（四舍五入）", fontproperties="SimHei")
+plt.xlabel(u"影片评分（四舍五入）", fontproperties="SimHei")
+plt.ylabel(u"影片数目", fontproperties="SimHei")
+plt.show()
+```
+
+输出如图：
+
+![bar](F:\zzp\大学\暑期小学期\python小学期\自学报告\pandas\caption\bar.png)
+
+#### 3. 分布直方图
+
+**方法：** `series_obj.plot.hist([alpha=])` 或 `dataframe_obj.plot.hist([alpha=])` ，
+
+```python
+# 直方图
+ratings_mean['rating'].plot.hist(bins=100)
+plt.title(u"影片评分的分布情况", fontproperties="SimHei")
+plt.xlabel(u"影片评分", fontproperties="SimHei")
+plt.ylabel(u"影片数目", fontproperties="SimHei")
+plt.show()
+```
+
+输出如图：
+
+![histogram](F:\zzp\大学\暑期小学期\python小学期\自学报告\pandas\caption\histogram.png)
+
+设置 cumulative = True 后，得到累计图：
+
+![histogram(cumulative)](F:\zzp\大学\暑期小学期\python小学期\自学报告\pandas\caption\histogram(cumulative).png)
+
+#### 4. 扇形图
+
+**方法：** `series_obj.plot.pie(figsize=(,)) `或 `dataframe_obj.plot.pie(figsize=(,))` ，
+
+```python
+# 扇形图
+rel['count'].plot.pie(figsize=(6,6))
+```
+
+输出结果：
+
+![pie](F:\zzp\大学\暑期小学期\python小学期\自学报告\pandas\caption\pie.png)
+
+#### 5. 散点图
+
+**方法：** `series_obj.plot.scatter(x=, y= [,c= [,...]])` 或 `dataframe_obj.plot.scatter(x=,y= [,c= [,...]])` ，
+
+```python
+# 将实际评分与平均分结合在一起
+scatter = pd.merge(movie_ratings,ratings_mean,on='movieId')
+scatter.plot.scatter(x='rating_x',y='rating_y')
+# 散点图
+plt.title(u"影片评分的分布情况", fontproperties="SimHei")
+plt.xlabel(u"评分均值", fontproperties="SimHei")
+plt.ylabel(u"影片评分", fontproperties="SimHei")
+```
+
+输出结果：
+
+![scatter](F:\zzp\大学\暑期小学期\python小学期\自学报告\pandas\caption\scatter.png)
+
+#### 6. Hexagonal Bin图：
+
+**方法：** `series_obj.plot.hexbin(x=, y= [,gridsize= [,...]])` 或 `dataframe_obj.plot.hexbin(x=,y= [,gridsize= [,...]])` ，
+
+```python
+# Hexagonal Bin图：
+scatter.plot.hexbin(x='rating_x',y='rating_y',gridsize=25)
+```
+
+输出结果：
+
+![hexagonal_bin](F:\zzp\大学\暑期小学期\python小学期\自学报告\pandas\caption\hexagonal_bin.png)
 
 ### 八、参考资料
 
