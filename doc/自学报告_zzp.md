@@ -42,7 +42,9 @@
 
    （3）**Filtration** ：对某些类别的数据进行丢弃、筛选等
 
-3. **Combine**：将经过操作的所有类别的数据重新按照某种方式组合起来 。
+3. **Combine**：将经过操作的所有类别的数据重新按照某种方式组合起来 。这一部分内容将在
+
+   [下一节](#jump1)介绍。
 
 下面简单介绍具体的方法：
 
@@ -59,11 +61,13 @@
 
 `grouped.get_group(key)` 方法：从所有分组中获得指定key的组。
 
-`grouped.groups` 属性：获得所有分组
-
 `grouped.filter()` 方法：筛选分组
 
 `grouped.count()` 方法：输出每个分组中的元素个数
+
+**常用属性：**
+
+`grouped.groups` 属性：获得所有分组
 
 迭代：`for name, group in grouped:` 
 
@@ -150,6 +154,8 @@ print(grouped.get_group('consonant'))
 
 ##### aggregation:
 
+**常用方法：**
+
 `grouped.aggregate(method)` 方法：使用method参数处理grouped中的每一个分组。
 
 `grouped.agg([method1[,method2[,...]]])` 方法：一次性用多个方法进行处理。
@@ -201,6 +207,8 @@ print(grouped.agg({'C' : 'sum', 'D' : 'std'}))
 1  foo -2.231638  0.773108
 ```
 
+**常用方法：**
+
 `grouped.describe()` 方法：计算一系列的统计量，这些统计量也有专门的函数可以单独调用。
 
 **实例**：
@@ -220,6 +228,8 @@ print(grouped.describe())
 ```
 
 ##### transformation
+
+**常用方法：**
 
 `grouped.transform(method)` 方法：使用method方法对每组中的数据进行处理
 
@@ -250,6 +260,8 @@ dtype: float64
 
 ##### filtration:
 
+**常用方法：**
+
  `grouped.filter(method)` 方法：使用method方法对每组中的数据进行判断，返回True或False，从而筛选出返回True的数据
 
 **实例**：
@@ -267,6 +279,8 @@ dtype: int64
 ```
 
 ##### apply：
+
+**常用方法：**
 
 `grouped.apply(method)` 方法：对每一个group应用apply方法
 
@@ -291,19 +305,221 @@ print(sf.apply(f))
 9  0.427524   0.182777
 ```
 
-（本节参考资料：http://pandas.pydata.org/pandas-docs/stable/groupby.html#）
+（本节参考资料：http://pandas.pydata.org/pandas-docs/stable/groupby.html）
 
 
 
-### 六、合并(merge,join,concatenate)
+### <span id="jump1"> 六、合并(concatenate,merge,join) </span>
+
+#### 1. concatenate:
+
+**常用方法：**
+
+`pd.concat(objs, axis=0, join='outer', join_axes=None, ignore_index=False,keys=None, levels=None, names=None, verify_integrity=False,copy=True)`  方法：
+
++ `objs`：需要合并的pandas对象的序列或者字典，其中字典的键值会被当做keys参数
++ `axis` ：合并的方向
++ `join` ：如何处理其他方向的index的合并，outer代表取并集，inner代表取交集
++ `ignore_index` ：是否忽略以前的index
++ `keys` ：作为新的index添加到合并后的元素中，形成多级的索引结构
++ `levels` ：一个列表序列，用来建立 multiIndex
++ `names` ：为新产生的index指定名字
++ `verify_integrity` ：查看合并方向上是否有重复
++ `copy` ：是否复制元素（深拷贝）
+
+**实例**：
+
+```python
+import numpy as np
+import pandas as pd
+
+df1 = pd.DataFrame({'A': ['A0', 'A1', 'A2', 'A3'],
+                     'B': ['B0', 'B1', 'B2', 'B3'],
+                     'C': ['C0', 'C1', 'C2', 'C3'],
+                     'D': ['D0', 'D1', 'D2', 'D3']},
+                     index=[0, 1, 2, 3])
+
+df2 = pd.DataFrame({'A': ['A4', 'A5', 'A6', 'A7'],
+                     'B': ['B4', 'B5', 'B6', 'B7'],
+                     'E': ['E4', 'E5', 'E6', 'E7'],
+                     'F': ['F4', 'F5', 'F6', 'F7']},
+                      index=[4, 5, 6, 7])
 
 
+df3 = pd.DataFrame({'A': ['A8', 'A9', 'A10', 'A11'],
+                     'B': ['B8', 'B9', 'B10', 'B11'],
+                     'C': ['C8', 'C9', 'C10', 'C11'],
+                     'D': ['D8', 'D9', 'D10', 'D11']},
+                     index=[8, 9, 10, 11])
+
+# concantenate展示1: join='inner',keys=['x', 'y', 'z'],names=['level1']
+concatenated1 = pd.concat([df1,df2,df3],join='inner',keys=['x', 'y', 'z'],names=['level1'])
+print(concatenated1)
+# 输出结果：
+             A    B
+level1             
+x      0    A0   B0
+       1    A1   B1
+       2    A2   B2
+       3    A3   B3
+y      4    A4   B4
+       5    A5   B5
+       6    A6   B6
+       7    A7   B7
+z      8    A8   B8
+       9    A9   B9
+       10  A10  B10
+       11  A11  B11
+    
+# concantenate展示2: join='outer'
+concatenated2 = pd.concat([df1,df2,df3],join='outer')
+print(concatenated2)
+# 输出结果：
+      A    B    C    D    E    F
+0    A0   B0   C0   D0  NaN  NaN
+1    A1   B1   C1   D1  NaN  NaN
+2    A2   B2   C2   D2  NaN  NaN
+3    A3   B3   C3   D3  NaN  NaN
+4    A4   B4  NaN  NaN   E4   F4
+5    A5   B5  NaN  NaN   E5   F5
+6    A6   B6  NaN  NaN   E6   F6
+7    A7   B7  NaN  NaN   E7   F7
+8    A8   B8   C8   D8  NaN  NaN
+9    A9   B9   C9   D9  NaN  NaN
+10  A10  B10  C10  D10  NaN  NaN
+11  A11  B11  C11  D11  NaN  NaN
+
+# concantenate展示3: axis=1,join='outer',ignore_index=True
+concatenated3 = pd.concat([df1,df2,df3],axis=1,join='outer',ignore_index=True)
+print(concatenated3)
+# 输出结果：
+     0    1    2    3    4    5    6    7    8    9    10   11
+0    A0   B0   C0   D0  NaN  NaN  NaN  NaN  NaN  NaN  NaN  NaN
+1    A1   B1   C1   D1  NaN  NaN  NaN  NaN  NaN  NaN  NaN  NaN
+2    A2   B2   C2   D2  NaN  NaN  NaN  NaN  NaN  NaN  NaN  NaN
+3    A3   B3   C3   D3  NaN  NaN  NaN  NaN  NaN  NaN  NaN  NaN
+4   NaN  NaN  NaN  NaN   A4   B4   E4   F4  NaN  NaN  NaN  NaN
+5   NaN  NaN  NaN  NaN   A5   B5   E5   F5  NaN  NaN  NaN  NaN
+6   NaN  NaN  NaN  NaN   A6   B6   E6   F6  NaN  NaN  NaN  NaN
+7   NaN  NaN  NaN  NaN   A7   B7   E7   F7  NaN  NaN  NaN  NaN
+8   NaN  NaN  NaN  NaN  NaN  NaN  NaN  NaN   A8   B8   C8   D8
+9   NaN  NaN  NaN  NaN  NaN  NaN  NaN  NaN   A9   B9   C9   D9
+10  NaN  NaN  NaN  NaN  NaN  NaN  NaN  NaN  A10  B10  C10  D10
+11  NaN  NaN  NaN  NaN  NaN  NaN  NaN  NaN  A11  B11  C11  D11
+```
+
+#### 2. merge:
+
+此方法是针对两个 `DataFrame` 对象的、类似于数据库方法的高效合并的方法。
+
+**常用方法：**
+
+`pd.merge(left, right, how='inner', on=None, left_on=None, right_on=None, left_index=False, right_index=False, sort=True, suffixes=('_x', '_y'), copy=True, indicator=False, validate=None) ` 方法：
+
+- `left` 、`right`：需要合并的 `DataFrame` 对象
+- `how` ：当左右的键值集合不相同时如何解决，可以取的值为`'left'`, `'right'`, `'outer'`, `'inner'` 
+- `on` ：选择按照哪些键值进行merge操作
+- `left_on`  ： 从 `left` 对象中选择的作为键值的column或index 
+- `right_on`  ： 从 `right` 对象中选择的作为键值的column或index 
+- `sort` ：是否将keys按照自字典序排序
+- `suffixes` ：当column名相同时用以加以区分的后缀
+- `copy` ：是否复制元素（深拷贝）
+- `indicator` ：用来指示每一行的数据的来源，在结果中额外增加`_merge_`  列，值可以为 `'left_only'`, `'right_only'`, `'both'` 
+- `validate`  ：验证合并的两元素的关系，取值为 '1:1' ,'1:m','m:1','m:m'
+
+**实例**：
+
+```python
+left = pd.DataFrame({'key1': ['K0', 'K0', 'K1', 'K2'],
+                      'key2': ['K0', 'K1', 'K0', 'K1'],
+                      'A': ['A0', 'A1', 'A2', 'A3'],
+                      'B': ['B0', 'B1', 'B2', 'B3']})
+
+right = pd.DataFrame({'key1': ['K0', 'K1', 'K1', 'K2'],
+                       'key2': ['K0', 'K0', 'K0', 'K0'],
+                       'C': ['C0', 'C1', 'C2', 'C3'],
+                       'D': ['D0', 'D1', 'D2', 'D3']})
+
+# merge展示1: on=['key1', 'key2']
+merged1 = pd.merge(left, right, on=['key1', 'key2'])
+print(merged1)
+# 输出结果：
+  key1 key2   A   B   C   D
+0   K0   K0  A0  B0  C0  D0
+1   K1   K0  A2  B2  C1  D1
+2   K1   K0  A2  B2  C2  D2
+
+# merge展示2: how='left', on=['key1', 'key2'], indicator=True, 键值组合集合以left为准
+merged2 = pd.merge(left, right, how='left', on=['key1', 'key2'], indicator=True)
+print(merged2)
+# 输出结果：
+  key1 key2   A   B    C    D     _merge
+0   K0   K0  A0  B0   C0   D0       both
+1   K0   K1  A1  B1  NaN  NaN  left_only
+2   K1   K0  A2  B2   C1   D1       both
+3   K1   K0  A2  B2   C2   D2       both
+4   K2   K1  A3  B3  NaN  NaN  left_only
+# merge展示3: how='right', on=['key1', 'key2'], indicator=True, 键值组合集合以right为准
+merged3 = pd.merge(left, right, how='right', on=['key1', 'key2'], indicator=True)
+print(merged3)
+# 输出结果：
+  key1 key2    A    B   C   D      _merge
+0   K0   K0   A0   B0  C0  D0        both
+1   K1   K0   A2   B2  C1  D1        both
+2   K1   K0   A2   B2  C2  D2        both
+3   K2   K0  NaN  NaN  C3  D3  right_only
+# merge展示4: how='outer', on=['key1', 'key2'], indicator=True, 键值组合集合求并集
+merged4 = pd.merge(left, right, how='outer', on=['key1', 'key2'], indicator=True)
+print(merged4)
+# 输出结果：
+  key1 key2    A    B    C    D      _merge
+0   K0   K0   A0   B0   C0   D0        both
+1   K0   K1   A1   B1  NaN  NaN   left_only
+2   K1   K0   A2   B2   C1   D1        both
+3   K1   K0   A2   B2   C2   D2        both
+4   K2   K1   A3   B3  NaN  NaN   left_only
+5   K2   K0  NaN  NaN   C3   D3  right_only
+# merge展示5: how='inner', on=['key1', 'key2'], indicator=True, 键值组合集合求交集
+merged5 = pd.merge(left, right, how='inner', on=['key1', 'key2'], indicator=True)
+print(merged5)
+# 输出结果：
+  key1 key2   A   B   C   D _merge
+0   K0   K0  A0  B0  C0  D0   both
+1   K1   K0  A2  B2  C1  D1   both
+2   K1   K0  A2  B2  C2  D2   both
+```
+
+#### 3. join:
+
+此方法是针对两个 `DataFrame` 对象的、类似于数据库方法的高效合并的方法。
+
+**常用方法：**
+
+`DataFrame.join(other, on=None, how='left', lsuffix='', rsuffix='', sort=False) ` 方法：
+
++ `other` ：`DataFrame ` 对象、带有 `name` 属性的`Series` 对象或者`DataFrame ` 对象的列表
++ `on` ：选择进行合并时选用的列
++ `how` ：可以取的值为`'left'`, `'right'`, `'outer'`, `'inner'` ，与merge方法的含义类似
++ `lsuffix` 、`rsuffix` ：当column名相同时用以加以区分的后缀
++ `sort` ：是否对键值对按照字典序进行排序
+
+事实上，以下两个函数是等价的：
+
+```python
+left.join(right, on=key_or_keys)
+pd.merge(left, right, left_on=key_or_keys, right_index=True,
+      how='left', sort=False)
+```
+
+因此，理解了 `merge` 函数也就理解了  `join` 函数，此处不再举例。
+
+（本节参考资料：http://pandas.pydata.org/pandas-docs/stable/merging.html）
 
 
 
 ### 七、可视化(visualize)
 
-1、散点图 (plot) ：直接调用 matplotlob 的plot() 方法
+1、散点图 (plot) ：直接调用 matplotlib 的plot() 方法
 
 
 
