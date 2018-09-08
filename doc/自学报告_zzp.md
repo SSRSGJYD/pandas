@@ -28,7 +28,7 @@
 
 ### 四、数据索引(index)、排序(sort)
 
-### 五、数据分组(group)
+### 五、数据分组(groupby)
 
 数据分组的含义包含3个方面：
 
@@ -491,7 +491,7 @@ print(merged5)
 
 #### 3. join:
 
-此方法是针对两个 `DataFrame` 对象的、类似于数据库方法的高效合并的方法。
+此方法是针对两个 `DataFrame` 对象，与`merge` 方法类似。
 
 **常用方法：**
 
@@ -517,7 +517,7 @@ pd.merge(left, right, left_on=key_or_keys, right_index=True,
 
 
 
-### 七、可视化(visualize)
+### 七、可视化
 
 在这里，我们针对数据集 `MovieLens` (https://grouplens.org/datasets/movielens/) 进行可视化分析。
 
@@ -553,7 +553,7 @@ plt.show()
 
 ![plot](F:\zzp\大学\暑期小学期\python小学期\自学报告\pandas\caption\plot.png)
 
-#### 2. 柱状图
+#### 2. 条形图
 
 **方法：** `series_obj.plot.bar()` 或 `dataframe_obj.plot.bar()` ，
 
@@ -568,7 +568,7 @@ for name, group in grouped:
     names.append(name)
     count.append(len(group))
 rel = pd.DataFrame({'count':count},index=names)
-# 柱状图
+# 条形图
 rel.plot.bar()
 plt.title(u"影片评分的分布情况（四舍五入）", fontproperties="SimHei")
 plt.xlabel(u"影片评分（四舍五入）", fontproperties="SimHei")
@@ -580,7 +580,7 @@ plt.show()
 
 ![bar](F:\zzp\大学\暑期小学期\python小学期\自学报告\pandas\caption\bar.png)
 
-#### 3. 分布直方图
+#### 3. 直方图
 
 **方法：** `series_obj.plot.hist([alpha=])` 或 `dataframe_obj.plot.hist([alpha=])` ，
 
@@ -607,7 +607,7 @@ plt.show()
 
 ```python
 # 扇形图
-rel['count'].plot.pie(figsize=(6,6))
+rel['count'].plot.pie(figsize=(6,6),autopct='%.2f')
 ```
 
 输出结果：
